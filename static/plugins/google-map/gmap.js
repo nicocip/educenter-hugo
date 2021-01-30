@@ -6,7 +6,7 @@ function initialize() {
   var longitude = $('#map_canvas').attr('data-longitude');
   var mapMarker = $('#map_canvas').attr('data-marker');
   var mapMarkerName = $('#map_canvas').attr('data-marker-name');
-  var nottingham = new google.maps.LatLng(latitude, longitude);
+  var tramelan = new google.maps.LatLng(latitude, longitude);
   var style = [{
       "featureType": "landscape",
       "stylers": [{
@@ -105,8 +105,8 @@ function initialize() {
     }
   ];
   var mapOptions = {
-    center: nottingham,
-    mapTypeId: google.maps.MapTypeId.ROADMAP,
+    center: tramelan,
+    mapTypeId: "OSM",
     backgroundColor: "#000",
     zoom: 15,
     panControl: false,
@@ -120,15 +120,29 @@ function initialize() {
     }
   }
   map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
-  var mapType = new google.maps.StyledMapType(style, {
-    name: "Grayscale"
+  var mapType = new google.maps.ImageMapType({
+    name: "OpenStreetMap",
+    tileSize: new google.maps.Size(256, 256),
+    maxZoom: 18,
+    getTileUrl: function(coord, zoom) {
+        // "Wrap" x (longitude) at 180th meridian properly
+        // NB: Don't touch coord.x: because coord param is by reference, and changing its x property breaks something in Google's lib
+        var tilesPerGlobe = 1 << zoom;
+        var x = coord.x % tilesPerGlobe;
+        if (x < 0) {
+            x = tilesPerGlobe+x;
+        }
+        // Wrap y (latitude) in a like manner if you want to enable vertical infinite scrolling
+
+        return "https://tile.openstreetmap.org/" + zoom + "/" + x + "/" + coord.y + ".png";
+    }
   });
-  map.mapTypes.set('grey', mapType);
-  map.setMapTypeId('grey');
+  map.mapTypes.set('OSM', mapType);
+  map.setMapTypeId('OSM');
   var marker_image = mapMarker;
   var pinIcon = new google.maps.MarkerImage(marker_image, null, null, null, new google.maps.Size(37, 55));
   marker = new google.maps.Marker({
-    position: nottingham,
+    position: tramelan,
     map: map,
     icon: pinIcon,
     title: mapMarkerName
